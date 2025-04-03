@@ -15,13 +15,13 @@ def calculate_sparsity(weights, threshold=1e-5):
     """
     return (weights.abs() < threshold).sum().item() / weights.numel()
 
-def prune_heads_by_sparsity(model, sparsity_threshold=0.5, max_prune_ratio=0.5):
+def prune_attention_weights_by_sparsity(model, sparsity_threshold=0.5, max_prune_ratio=0.5):
     """
-    基于稀疏性剪枝策略，剪掉指定的头。
+    基于稀疏性剪枝策略，剪掉指定的注意力权重。
     
     参数：
     model - 需要进行剪枝的模型
-    sparsity_threshold - 稀疏性阈值，低于此值的模块将有更多头被剪枝
+    sparsity_threshold - 稀疏性阈值，低于此值的模块将有更多的权重被剪枝
     max_prune_ratio - 最大剪枝比例，避免过度剪枝
     """
     pruned_model = copy.deepcopy(model)
@@ -45,26 +45,27 @@ def prune_heads_by_sparsity(model, sparsity_threshold=0.5, max_prune_ratio=0.5):
         qkv_weights = module.qkv.weight.data
         proj_weights = module.proj.weight.data
         
-        num_heads = module.qkv.weight.size(0) // 3  # qkv 是 [3 * num_heads, embed_dim]
-        max_heads_to_prune = num_heads // 4  # 每个模块最多剪掉 4 个头
+        num_attention_heads = module.qkv.weight.size(0) // 3  # qkv 是 [3 * num_attention_heads, embed_dim]
+        max_weights_to_prune = num_attention_heads // 4  # 每个模块最多剪掉 4 个权重块
         
-        # 计算剪枝的头数：如果稀疏性大于阈值，剪掉更多头
-        heads_to_prune_count = int(min(max_prune_ratio * num_heads, max_heads_to_prune))
+        # 计算剪枝的权重数量：如果稀疏性大于阈值，剪掉更多权重
+        weights_to_prune_count = int(min(max_prune_ratio * num_attention_heads, max_weights_to_prune))
         
-        print(f"Module {name} with sparsity {sparsity:.4f} will prune {heads_to_prune_count} heads.")
+        print(f"Module {name} with sparsity {sparsity:.4f} will prune {weights_to_prune_count} weight blocks.")
         
-        # 选择剪枝的头：根据模块的稀疏性，优先剪掉最不重要的头
-        for head_index in range(heads_to_prune_count):
-            start_idx = head_index * proj_weights.shape[1] // num_heads
-            end_idx = (head_index + 1) * proj_weights.shape[1] // num_heads
-            qkv_weights[head_index] = 0  # 将 qkv 中的该头部分置零
-            proj_weights[:, start_idx:end_idx] = 0  # 将 proj 中的该头权重置零
+        # 选择剪枝的权重块：根据模块的稀疏性，优先剪掉最不重要的权重
+        for weight_index in range(weights_to_prune_count):
+            start_idx = weight_index * proj_weights.shape[1] // num_attention_heads
+            end_idx = (weight_index + 1) * proj_weights.shape[1] // num_attention_heads
+            qkv_weights[weight_index] = 0  # 将 qkv 中的该权重部分置零
+            proj_weights[:, start_idx:end_idx] = 0  # 将 proj 中的该权重块置零
         
         # 重新赋值到模块中
         module.qkv.weight.data = qkv_weights
         module.proj.weight.data = proj_weights
     
     return pruned_model
+
 
 
 def generate_prune_mask_SVD(weight_matrix: torch.Tensor, prune_ratio: float, dim: int = 1) -> torch.Tensor:
