@@ -1,0 +1,35 @@
+Qwen-2B-1 原模型：
+计算复杂度: 14.66 T
+MACs: 7.33 TMACs
+参数数量: 2.21 B
+
+Qwen + SVDMLP 剪枝 12.5%：
+计算复杂度: 14.14 T
+MACs: 7.07 TMACs
+参数数量: 2.16 B
+
+Qwen + SVDMLP 剪枝 25%：
+计算复杂度: 13.61 T
+MACs: 6.81 TMACs
+参数数量: 2.1 B
+
+Qwen + SVDMLP 剪枝 35%：
+计算复杂度: 13.2 T
+MACs: 6.6 TMACs
+参数数量: 2.06 B
+
+Qwen + SVDMLP 剪枝 40%：
+计算复杂度: 12.99 T
+MACs: 6.49 TMACs
+参数数量: 2.04 B
+
+Qwen + SVDMLP 剪枝 45%：
+计算复杂度: 12.78 T
+MACs: 6.39 TMACs
+参数数量: 2.02 B
+
+Qwen + SVDMLP 剪枝 50%：
+计算复杂度: 12.57 T
+MACs: 6.28 TMACs
+参数数量: 2 B
+
